@@ -1,12 +1,17 @@
 import tkinter as TKinter
 from tkinter import ttk as TTK
 
+import time
+import sys
+
 class AutoClickerUI():
     def __init__(Self):
         Self.Root = TKinter.Tk()
         Self.Root.title("Pie's AutoClicker")
         Self.Root.resizable(False, False)
         Self.Root.geometry("550x450")
+
+        Self.Ended = False
 
         # Gets the position/position type
         Self.MousePositionX, Self.MousePositionY, Self.PositionStyle = TKinter.StringVar(value="0"), TKinter.StringVar(value="0"), TKinter.StringVar(value="Current")
@@ -17,8 +22,15 @@ class AutoClickerUI():
         # Gets the Repeat mode, Gets the repeat amount
         Self.RepeatMode, Self.RepeatAmount = TKinter.StringVar(value="Until Stopped"), TKinter.StringVar(value="1")
 
+
+        # UI Theme, saves
+        Self.UITheme = "Default"
+        Self.UIColors = {}
+
         
-        Self.CreateUI()
+        Self.CreateMainUI()
+
+        Self.Root.protocol("WM_DELETE_WINDOW", Self.Quit)  # Ensures the window closes properly
 
         # Starts the main loop
         Self.UpdateUI()
@@ -26,6 +38,11 @@ class AutoClickerUI():
     def UpdateUI(Self):
         Self.Root.update_idletasks()
         Self.Root.update()
+
+    def Quit(Self):
+        Self.Root.destroy()
+        Self.Root.quit()
+        Self.Ended = True
 
     def GetMenuInputs(Self):
         def CheckValue(Value, Default):
@@ -40,17 +57,17 @@ class AutoClickerUI():
             "PositionStyle": str(Self.PositionStyle.get()),
             "ClickType": str(Self.ClickType.get()),
             "ClickStyle": str(Self.ClickStyle.get()),
-            "ClickSpeed": (CheckValue(Self.Hours.get(), 0) * 3600) + (CheckValue(Self.Minutes.get(), 0) * 60) + CheckValue(Self.Seconds.get(), 0.01) + (CheckValue(Self.Milliseconds.get(), 0) / 1000),
+            "ClickSpeed": (CheckValue(Self.Hours.get(), 0) * 3600) + (CheckValue(Self.Minutes.get(), 0) * 60) + CheckValue(Self.Seconds.get(), 0) + (CheckValue(Self.Milliseconds.get(), 1) / 1000),
             "RepeatMode": str(Self.RepeatMode.get()),
             "RepeatAmount": CheckValue(Self.RepeatAmount.get(), 1)
         }
 
         return Inputs
 
-    def CreateUI(Self):
+    def CreateMainUI(Self):
         # Click Speed Section
         CSSection = TKinter.LabelFrame(Self.Root, text="Click Interval")
-        CSSection.pack(pady=10, fill="x", padx=10)
+        CSSection.pack(pady=5, fill="x", padx=10)
 
         CSGrid = TKinter.Frame(CSSection)
         CSGrid.pack(pady=10, fill="x")
@@ -74,11 +91,11 @@ class AutoClickerUI():
 
         # Container for the side-by-side sections
         TopFrame = TKinter.Frame(Self.Root)
-        TopFrame.pack(pady=10, fill="x")
+        TopFrame.pack(pady=5, fill="x")
 
         # Click Options Section
         COSection = TKinter.LabelFrame(TopFrame, text="Click options")
-        COSection.grid(row=0, column=1, padx=12, sticky="n")
+        COSection.grid(row=0, column=2, padx=12, sticky="w")
 
         TKinter.Label(COSection, text="Click Type:").grid(row=0, column=0, sticky="w", padx=5, pady=5)
         ClickTypeDropdown = TTK.OptionMenu(COSection, Self.ClickType, "Left", "Left", "Right", "Middle")
@@ -90,7 +107,7 @@ class AutoClickerUI():
 
         # Click Position Section
         CPSection = TKinter.LabelFrame(TopFrame, text="Click Position")
-        CPSection.grid(row=0, column=2, padx=35, sticky="n")
+        CPSection.grid(row=0, column=6, padx=35, sticky="e")
 
         TKinter.Radiobutton(CPSection, text="Current location", variable=Self.PositionStyle, value="Current").grid(row=0, column=0, columnspan=3, sticky="w", padx=5, pady=5)
         TKinter.Radiobutton(CPSection, text="Fixed", variable=Self.PositionStyle, value="Custom").grid(row=1, column=0, sticky="w", padx=5, pady=5)
@@ -106,7 +123,7 @@ class AutoClickerUI():
 
         # Repeat Options Section
         ROSection = TKinter.LabelFrame(Self.Root, text="Repeat Options")
-        ROSection.pack(pady=10, fill="x", padx=10)
+        ROSection.pack(pady=5, fill="x", padx=10)
 
         TKinter.Radiobutton(ROSection, text="Repeat", variable=Self.RepeatMode, value="Fixed").grid(row=0, column=0, sticky="w", padx=5, pady=5)
 
@@ -115,6 +132,36 @@ class AutoClickerUI():
         TKinter.Label(ROSection, text="times").grid(row=0, column=2)
         TKinter.Radiobutton(ROSection, text="Repeat until stopped", variable=Self.RepeatMode, value="Until Stopped").grid(row=1, column=0, sticky="w", padx=5, pady=5)
 
+        # Bottom Buttons Section
+        BottomButtonSection = TKinter.Frame(Self.Root)
+        BottomButtonSection.pack(pady=20, fill="x")
+
+        # Keybind Setting Button
+        KeybindButton = TKinter.Button(BottomButtonSection, text="Set Keybind", command=lambda: Self.CreateKeybindUI())
+        KeybindButton.grid(row=0, column=0, padx=5, pady=5)
+
+        # Record/Playback Button
+        RecordButton = TKinter.Button(BottomButtonSection, text="Record/Playback", command=lambda: Self.CreateRecordUI())
+        RecordButton.grid(row=0, column=2, padx=5, pady=5)
+
+        # Settings Button 
+        SettingsButton = TKinter.Button(BottomButtonSection, text="Settings", command=lambda: Self.CreateUISettingsUI())
+        SettingsButton.grid(row=0, column=4, padx=5, pady=5)
+
+
+    def CreateRecordUI(Self):
+        RecordUI = TKinter.Toplevel(Self.Root)
+        RecordUI.title("Record/Playback")
+        RecordUI.geometry("400x300")
+
+        # Placeholder for record/playback functionality
+        TKinter.Label(RecordUI, text="This is where the record/playback UI will be.").pack(pady=20)
+
+    def CreateKeybindUI(Self):
+        pass
+
+    def CreateUISettingsUI(Self):
+        pass
 
 
 

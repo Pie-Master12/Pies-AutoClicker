@@ -1,8 +1,10 @@
 import time
 import os
+import sys
 import json
 import pyautogui
 from pynput import keyboard
+from pynput.keyboard import Key, Controller
 
 # File directories
 import UI.UIStart as UIStart
@@ -21,6 +23,7 @@ class AutoClicker():
         Self.load_settings()
         Self.save_settings()
 
+        Self.UIInstance = UIInstance
         OtherStuff = UIInstance.GetMenuInputs()
 
         Self.ClickSpeed = OtherStuff["ClickSpeed"]
@@ -67,32 +70,59 @@ class AutoClicker():
             if SettingKeybind:
                 Self.Settings["ToggleKey"] = key.char if hasattr(key, 'char') else key.name
                 Self.save_settings()
-            elif key.char == Self.Settings["ToggleClicker"] and not LockEnabled:  # Toggles AutoClicker
+
+            elif key.char == Self.Settings["ToggleClicker"] and not LockEnabled and not KeyboardSimulation:  # Toggles AutoClicker
                 MouseClicking = not MouseClicking
                 print("Clicking:", MouseClicking)
+
+            elif key.char == Self.Settings["ToggleKey"] and not LockEnabled and not MouseClicking:  # Toggles Key Simulation
+                KeyboardSimulation = not KeyboardSimulation
+                print("Keyboard Simulation:", KeyboardSimulation)
+                Self.Record()
+
             elif key.char == Self.Settings["Lock"]:  # Locking Function
                 LockEnabled = not LockEnabled
                 print("Lock Enabled:", LockEnabled)
+
             else:
                 # print("Key pressed was not a valid keybind.")
                 pass
         except:
             pass
 
+    def Click(Self, ClickType, ClickStyle, PositionX, PositionY, PositionStyle):
+        if ClickStyle == "Double":
+            pyautogui.click(button=str(ClickType), x=PositionX if PositionStyle == "Custom" else None, y=PositionY if PositionStyle == "Custom" else None)
+            time.sleep(0.015)  # Small delay for double click
+            pyautogui.click(button=str(ClickType), x=PositionX if PositionStyle == "Custom" else None, y=PositionY if PositionStyle == "Custom" else None)
+        else:
+            pyautogui.click(button=str(ClickType), x=PositionX if PositionStyle == "Custom" else None, y=PositionY if PositionStyle == "Custom" else None)
+            #KeyBoard.press(Key.space)
+            #KeyBoard.press('s')
+            #time.sleep(0.4)
+            #KeyBoard.release(Key.space)
+            #KeyBoard.release('s')
+            #pyautogui.click(button=str(ClickType), x=PositionX if PositionStyle == "Custom" else None, y=PositionY if PositionStyle == "Custom" else None)
+            #KeyBoard.press('w')
+            #time.sleep(0.402)
+            #KeyBoard.release('w')
+            #pyautogui.click(button=str(ClickType), x=PositionX if PositionStyle == "Custom" else None, y=PositionY if PositionStyle == "Custom" else None)
+
+    def Record(Self):
+        Self.UIInstance.CreateRecordUI()
+
+    def Playback(Self):
+        pass
+
+
+
 
 MainUI = UIStart.StartUILoop()
+KeyBoard = Controller()
 AutoClickerInstance = AutoClicker(MainUI)
 
 Listener = keyboard.Listener(on_press = AutoClickerInstance.on_press)
 Listener.start()
-
-def Click(ClickType, ClickStyle, PositionX, PositionY, PositionStyle):
-    if ClickStyle == "Double":
-        pyautogui.click(button=str(ClickType) if PositionStyle == "Current" else (PositionX, PositionY), )
-        time.sleep(0.015)  # Small delay for double click
-        pyautogui.click(button=str(ClickType))
-    else:
-        pyautogui.click(button=str(ClickType), x=PositionX if PositionStyle == "Custom" else None, y=PositionY if PositionStyle == "Custom" else None)
 
 
 while AutoClickerInstance.RepeatAmount > 0 or AutoClickerInstance.RepeatMode == "Until Stopped":
@@ -102,11 +132,14 @@ while AutoClickerInstance.RepeatAmount > 0 or AutoClickerInstance.RepeatMode == 
         AutoClickerInstance.RepeatAmount -= 1
         if AutoClickerInstance.RepeatAmount <= 0:
             MouseClicking = False
+    elif MainUI.Ended:
+        SystemExit(0)
+        sys.exit(0)
 
     AutoClickerInstance.UpdateSettings(MainUI)
 
     if MouseClicking:
-        Click(AutoClickerInstance.ClickType, AutoClickerInstance.ClickStyle, AutoClickerInstance.MousePositionX, AutoClickerInstance.MousePositionY, AutoClickerInstance.PositionStyle)
+        AutoClickerInstance.Click(AutoClickerInstance.ClickType, AutoClickerInstance.ClickStyle, AutoClickerInstance.MousePositionX, AutoClickerInstance.MousePositionY, AutoClickerInstance.PositionStyle)
         time.sleep(AutoClickerInstance.ClickSpeed) # Changes the speed of the mouse clicking
     elif KeyboardSimulation:
         pass  # Placeholder for keyboard logic
