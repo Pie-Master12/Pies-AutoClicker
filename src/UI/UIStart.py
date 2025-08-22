@@ -21,11 +21,13 @@ class AutoClickerUI():
         Self.Hours, Self.Minutes, Self.Seconds, Self.Milliseconds = TKinter.StringVar(value="0"), TKinter.StringVar(value="0"), TKinter.StringVar(value="0"), TKinter.StringVar(value="100")
         # Gets the Repeat mode, Gets the repeat amount
         Self.RepeatMode, Self.RepeatAmount = TKinter.StringVar(value="Until Stopped"), TKinter.StringVar(value="1")
-
-
         # UI Theme, saves
-        Self.UITheme = "Default"
+        Self.UITheme = TKinter.StringVar(value="Default")
         Self.UIColors = {}
+
+        # Frames
+        Self.CurrentFrame = "FrameOne"  # Keeps track of the current frame
+        Self.FrameOne = Self.Root
 
         
         Self.CreateMainUI()
@@ -40,9 +42,16 @@ class AutoClickerUI():
         Self.Root.update()
 
     def Quit(Self):
-        Self.Root.destroy()
-        Self.Root.quit()
-        Self.Ended = True
+        print("Frame: " + Self.CurrentFrame)
+
+        if Self.CurrentFrame == "FrameOne":
+            Self.Root.destroy()
+            Self.Root.quit()
+            Self.Ended = True
+        else:
+            Self.FrameOne.pack_forget()
+            Self.CreateMainUI()
+
 
     def GetMenuInputs(Self):
         def CheckValue(Value, Default):
@@ -65,8 +74,21 @@ class AutoClickerUI():
         return Inputs
 
     def CreateMainUI(Self):
+        Self.Root.geometry("550x450")
+
+        if Self.CurrentFrame != "FrameOne":
+            Self.FrameOne.pack_forget()
+            Self.CurrentFrame = "FrameOne"
+
+        # Main UI Frame
+        MainFrame = TKinter.Frame(Self.Root)
+        MainFrame.pack(fill="both", expand=True)
+
+        Self.FrameOne = MainFrame
+
+
         # Click Speed Section
-        CSSection = TKinter.LabelFrame(Self.Root, text="Click Interval")
+        CSSection = TKinter.LabelFrame(MainFrame, text="Click Interval")
         CSSection.pack(pady=5, fill="x", padx=10)
 
         CSGrid = TKinter.Frame(CSSection)
@@ -90,7 +112,7 @@ class AutoClickerUI():
 
 
         # Container for the side-by-side sections
-        TopFrame = TKinter.Frame(Self.Root)
+        TopFrame = TKinter.Frame(MainFrame)
         TopFrame.pack(pady=5, fill="x")
 
         # Click Options Section
@@ -98,11 +120,11 @@ class AutoClickerUI():
         COSection.grid(row=0, column=2, padx=12, sticky="w")
 
         TKinter.Label(COSection, text="Click Type:").grid(row=0, column=0, sticky="w", padx=5, pady=5)
-        ClickTypeDropdown = TTK.OptionMenu(COSection, Self.ClickType, "Left", "Left", "Right", "Middle")
+        ClickTypeDropdown = TTK.OptionMenu(COSection, Self.ClickType, Self.ClickType.get(), "Left", "Right", "Middle")
         ClickTypeDropdown.grid(row=0, column=1, padx=5, pady=5)
 
         TKinter.Label(COSection, text="Click Style:").grid(row=1, column=0, sticky="w", padx=5, pady=5)
-        ClickStyleDropdown = TTK.OptionMenu(COSection, Self.ClickStyle, "Single", "Single", "Double")
+        ClickStyleDropdown = TTK.OptionMenu(COSection, Self.ClickStyle, Self.ClickStyle.get(), "Single", "Double")
         ClickStyleDropdown.grid(row=1, column=1, padx=5, pady=5)    
 
         # Click Position Section
@@ -122,7 +144,7 @@ class AutoClickerUI():
 
 
         # Repeat Options Section
-        ROSection = TKinter.LabelFrame(Self.Root, text="Repeat Options")
+        ROSection = TKinter.LabelFrame(MainFrame, text="Repeat Options")
         ROSection.pack(pady=5, fill="x", padx=10)
 
         TKinter.Radiobutton(ROSection, text="Repeat", variable=Self.RepeatMode, value="Fixed").grid(row=0, column=0, sticky="w", padx=5, pady=5)
@@ -133,35 +155,92 @@ class AutoClickerUI():
         TKinter.Radiobutton(ROSection, text="Repeat until stopped", variable=Self.RepeatMode, value="Until Stopped").grid(row=1, column=0, sticky="w", padx=5, pady=5)
 
         # Bottom Buttons Section
-        BottomButtonSection = TKinter.Frame(Self.Root)
+        BottomButtonSection = TKinter.Frame(MainFrame)
         BottomButtonSection.pack(pady=20, fill="x")
 
         # Keybind Setting Button
         KeybindButton = TKinter.Button(BottomButtonSection, text="Set Keybind", command=lambda: Self.CreateKeybindUI())
-        KeybindButton.grid(row=0, column=0, padx=5, pady=5)
+        KeybindButton.grid(row=0, column=4, padx=10, pady=10)
 
         # Record/Playback Button
         RecordButton = TKinter.Button(BottomButtonSection, text="Record/Playback", command=lambda: Self.CreateRecordUI())
-        RecordButton.grid(row=0, column=2, padx=5, pady=5)
+        RecordButton.grid(row=0, column=6, padx=10, pady=10)
 
         # Settings Button 
         SettingsButton = TKinter.Button(BottomButtonSection, text="Settings", command=lambda: Self.CreateUISettingsUI())
-        SettingsButton.grid(row=0, column=4, padx=5, pady=5)
+        SettingsButton.grid(row=0, column=8, padx=10, pady=10)
 
 
     def CreateRecordUI(Self):
-        RecordUI = TKinter.Toplevel(Self.Root)
-        RecordUI.title("Record/Playback")
-        RecordUI.geometry("400x300")
+        Self.Root.geometry("1100x900")
+        Self.FrameOne.pack_forget()
+
+        # Main UI Frame
+        MainFrame = TKinter.Frame(Self.Root)
+        MainFrame.pack(fill="both", expand=True)
+        Self.CurrentFrame = "FrameTwo"
+        Self.FrameOne = MainFrame
 
         # Placeholder for record/playback functionality
-        TKinter.Label(RecordUI, text="This is where the record/playback UI will be.").pack(pady=20)
+        TKinter.Label(MainFrame, text="This is where the record/playback UI will be.").pack(pady=20)
+
 
     def CreateKeybindUI(Self):
-        pass
+        Self.Root.geometry("550x450")
+        Self.FrameOne.pack_forget()
+
+        # Main UI Frame
+        MainFrame = TKinter.Frame(Self.Root)
+        MainFrame.pack(fill="both", expand=True)
+        Self.CurrentFrame = "FrameThree"
+        Self.FrameOne = MainFrame
+
+
+
 
     def CreateUISettingsUI(Self):
-        pass
+        Self.Root.geometry("550x450")
+        Self.FrameOne.pack_forget()
+
+        # Main UI Frame
+        MainFrame = TKinter.Frame(Self.Root)
+        MainFrame.pack(fill="both", expand=True)
+        Self.CurrentFrame = "FrameFour"
+        Self.FrameOne = MainFrame
+
+        # Scrollable Frame with scrollbar and mousewheel
+        Canvas = TKinter.Canvas(MainFrame, height=300)
+        Scrollbar = TKinter.Scrollbar(MainFrame, orient="vertical", command=Canvas.yview)
+        Scrollable_frame = TKinter.Frame(Canvas)
+
+        Scrollable_frame.bind(
+            "<Configure>",
+            lambda e: Canvas.configure(
+                scrollregion=Canvas.bbox("all")
+            )
+        )
+
+        Canvas.create_window((0, 0), window=Scrollable_frame, anchor="nw")
+        Canvas.configure(yscrollcommand=Scrollbar.set)
+
+        Canvas.pack(side="left", fill="both", expand=True)
+        Scrollbar.pack(side="right", fill="y")
+
+        # Add labels to scrollable frame
+
+
+
+        # Bind mousewheel scrolling
+        Self.bind_mousewheel(Canvas)
+
+    def bind_mousewheel(self, widget):
+        # Windows and Linux
+        widget.bind_all("<MouseWheel>", lambda e: widget.yview_scroll(int(-1*(e.delta/120)), "units"))
+        # For Linux with shift key pressed (horizontal scrolling)
+        widget.bind_all("<Shift-MouseWheel>", lambda e: widget.xview_scroll(int(-1*(e.delta/120)), "units"))
+        # macOS uses different event.delta values
+        widget.bind_all("<Button-4>", lambda e: widget.yview_scroll(-1, "units"))
+        widget.bind_all("<Button-5>", lambda e: widget.yview_scroll(1, "units"))
 
 
 
