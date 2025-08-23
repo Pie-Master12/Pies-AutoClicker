@@ -1,17 +1,41 @@
 import tkinter as TKinter
 from tkinter import ttk as TTK
+import webbrowser
 
 import time
 import sys
+import json
+import os
 
 class AutoClickerUI():
     def __init__(Self):
         Self.Root = TKinter.Tk()
         Self.Root.title("Pie's AutoClicker")
+        Self.ScreenWidth = Self.Root.winfo_screenwidth()
+        Self.ScreenHeight = Self.Root.winfo_screenheight()
         Self.Root.resizable(False, False)
-        Self.Root.geometry("550x450")
+        Self.Root.geometry(f"550x450+{(Self.ScreenWidth // 2) - (550 // 2)}+{(Self.ScreenHeight // 2) - (450 // 2)}")  # Centers the window on the screen
 
         Self.Ended = False
+
+        MenuBar = TKinter.Menu(Self.Root)
+
+        SettingsMenu = TKinter.Menu(MenuBar, tearoff=0)
+        SettingsMenu.add_command(label="General", command=lambda: None)
+        SettingsMenu.add_command(label="Keybinds", command=lambda: Self.CreateKeybindUI())
+        SettingsMenu.add_command(label="Theme", command=lambda: Self.CreateUISettingsUI())
+        MenuBar.add_cascade(label="Settings", menu=SettingsMenu)
+
+        AboutMenu = TKinter.Menu(MenuBar, tearoff=0)
+        AboutMenu.add_command(label="Discord", command=lambda: webbrowser.open("https://discord.gg/pNPJFkqWBW"))
+        AboutMenu.add_command(label="GitHub", command=lambda: webbrowser.open("https://github.com/Pie-Master12/Pies-AutoClicker"))
+        AboutMenu.add_command(label="WebPage", command=lambda: webbrowser.open_new_tab("src\WebPages\About.html")) # Opens the about us webpage
+        MenuBar.add_cascade(label="About", menu=AboutMenu)
+
+        MenuBar.add_cascade(label="Help", command=lambda: webbrowser.open_new_tab("src\WebPages\Documentation.html")) # Opens Documentation
+
+        Self.Root.config(menu=MenuBar)
+
 
         # Gets the position/position type
         Self.MousePositionX, Self.MousePositionY, Self.PositionStyle = TKinter.StringVar(value="0"), TKinter.StringVar(value="0"), TKinter.StringVar(value="Current")
@@ -158,21 +182,14 @@ class AutoClickerUI():
         BottomButtonSection = TKinter.Frame(MainFrame)
         BottomButtonSection.pack(pady=20, fill="x")
 
-        # Keybind Setting Button
-        KeybindButton = TKinter.Button(BottomButtonSection, text="Set Keybind", command=lambda: Self.CreateKeybindUI())
-        KeybindButton.grid(row=0, column=4, padx=10, pady=10)
-
         # Record/Playback Button
         RecordButton = TKinter.Button(BottomButtonSection, text="Record/Playback", command=lambda: Self.CreateRecordUI())
-        RecordButton.grid(row=0, column=6, padx=10, pady=10)
+        RecordButton.grid(row=0, column=10, padx=10, pady=10)
 
-        # Settings Button 
-        SettingsButton = TKinter.Button(BottomButtonSection, text="Settings", command=lambda: Self.CreateUISettingsUI())
-        SettingsButton.grid(row=0, column=8, padx=10, pady=10)
 
 
     def CreateRecordUI(Self):
-        Self.Root.geometry("1100x900")
+        Self.Root.geometry("650x800")
         Self.FrameOne.pack_forget()
 
         # Main UI Frame
@@ -181,8 +198,80 @@ class AutoClickerUI():
         Self.CurrentFrame = "FrameTwo"
         Self.FrameOne = MainFrame
 
-        # Placeholder for record/playback functionality
-        TKinter.Label(MainFrame, text="This is where the record/playback UI will be.").pack(pady=20)
+        Changed = True
+        Saved = False
+
+        
+        def Save_Menu(Number, Name, Description):
+            def SaveToFile(Number):
+                Changed = False
+                Saved = True
+                with open(f"Save{Number}.json", "w") as SavedFile:
+                    with open("TempKeyList.json", "r") as TempFile:
+                        json.dump(json.load(TempFile), SavedFile)
+
+        def Load_Menu():
+            def LoadFromFile(Number):
+                Changed = False
+                Saved = True
+                with open(f"Save{Number}.json", "r") as SavedFile:
+                    KeyList = json.load(SavedFile)
+                with open("TempKeyList.json", "w") as TempFile:
+                    json.dump(KeyList, TempFile)
+
+                
+
+        def AddToList(ActionType, Button, PositionX, PositionY):
+            Changed = True
+            Saved = False
+
+        def RemoveFromList(ListItem):
+            Changed = True
+            Saved = False
+
+        def ClearList():
+            if Changed and not Saved:
+                PromptInput = Self.CreateMessagePrompt("Unsaved Changes", "You have unsaved changes. Would you like to continue clearing the list? Doing so without saving may result in a loss of data.")
+                if PromptInput == False:
+                    pass
+                else:
+                    with open("TempKeyList.json", "w") as TempFile:
+                        json.dump({}, TempFile)
+            else:
+                with open("TempKeyList.json", "w") as TempFile:
+                    json.dump({}, TempFile)
+
+        def ChangeListItem():
+            Changed = True
+            Saved = False
+
+
+        # Top Frame, Methods to start/stop the recording and playback
+        TopFrame = TKinter.Frame(MainFrame, height=150, bg="Gray")
+        TopFrame.pack(fill="x")
+
+        RecordButton = TKinter.Button(TopFrame, text="Record", width=12, height=1, command=lambda: None)
+        RecordButton.pack(pady=20, side="left", padx=5)
+
+        PlaybackButton = TKinter.Button(TopFrame, text="Playback", width=12, height=1, command=lambda: None)
+        PlaybackButton.pack(pady=20, side="left", padx=5)
+
+        # Save and Load macro files to return to later
+        SaveButton = TKinter.Button(TopFrame, text="Save", width=12, height=1, command=lambda: Save_Menu())
+        SaveButton.pack(pady=20, side="left", padx=5)
+
+        LoadButton = TKinter.Button(TopFrame, text="Load", width=12, height=1, command=lambda: ClearList())
+        LoadButton.pack(pady=20, side="left", padx=5)
+
+        # Right Frame, Contains methods to change/add/remove items from the list
+        RightFrame = TKinter.Frame(MainFrame, width=250, bg="gray")
+        RightFrame.pack(side="right", fill="y")
+
+
+        # List Frame, Where all the recorded key/mouse actions are listed
+        ListFrame = TKinter.Frame(MainFrame, bg="Black")
+        ListFrame.pack(fill="both", expand=True)
+
 
 
     def CreateKeybindUI(Self):
@@ -196,6 +285,31 @@ class AutoClickerUI():
         Self.FrameOne = MainFrame
 
 
+    def CreateMessagePrompt(Self, callback, Title, Message):
+        OptionSelected = False
+
+        MessageBox = TKinter.Toplevel(Self.Root)
+        MessageBox.title(Title)
+        MessageBox.resizable(False, False)
+        MessageBox.grab_set()  # Makes the message box modal
+        MessageBox.transient(Self.Root)  # Makes sure the message box is always on top of the main window
+        MessageBox.focus_set()  # Focuses the message box
+        MessageBox.lift()  # Brings the message box to the front
+        MessageBox.attributes("-topmost", True)  # Ensures the message box stays on top
+        MessageBox.update_idletasks()  # Updates the message box to ensure it is on
+        MessageBox.anchor = "center"
+        MessageBox.geometry(f"350x175+{(Self.ScreenWidth // 2) - (350 // 2)}+{(Self.ScreenHeight // 2) - (175 // 2)}")  # Centers the message box on the screen
+
+        MessageLabel = TKinter.Label(MessageBox, text=Message, wraplength=250)
+        MessageLabel.pack(pady=20)
+
+        CancelButton = TKinter.Button(MessageBox, text="Cancel", command=lambda: callback(False), width=10)
+        CancelButton.pack(pady=10, fill="y")
+
+        ContinueButton = TKinter.Button(MessageBox, text="Continue", command=lambda: callback(True), width=10)
+        ContinueButton.pack(pady=10, fill="y")
+
+        MessageBox.transient(Self.Root)
 
 
     def CreateUISettingsUI(Self):
